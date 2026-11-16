@@ -11,6 +11,9 @@ class GalleryFileOpsTest {
 
     @Test
     fun foldersAsStoragePaths() {
+        // java.io.File turns "/" into "\" on Windows, so these Android-style paths only
+        // compare on Unix hosts (the CI runs Linux); skip rather than fail on Windows.
+        org.junit.Assume.assumeTrue(java.io.File.separatorChar == '/')
         assertEquals("DCIM/Camera/", GalleryFileOps.relativeDir("/storage/emulated/0/DCIM/Camera/a.jpg", "/storage/emulated/0"))
         assertEquals("Download/QuickTube/Fresh bulk/", GalleryFileOps.relativeDir("/storage/emulated/0/Download/QuickTube/Fresh bulk/v.mp4", "/storage/emulated/0"))
         // A file at the very top, or outside shared storage, has no folder to copy into.
