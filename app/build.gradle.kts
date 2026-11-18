@@ -18,6 +18,11 @@ val localProps = Properties().apply {
 }
 fun secret(name: String): String? = System.getenv(name) ?: localProps.getProperty(name)
 
+// Release APKs are phones-only (the bundled Python runtime is per-ABI, so this keeps each APK small).
+// Emulator builds opt in to an extra ABI: ./gradlew :app:installDebug -PlocalAbi=x86_64
+val localAbi = (project.findProperty("localAbi") as String?)?.takeIf { it.isNotBlank() }
+val apkAbis = listOf("arm64-v8a", "armeabi-v7a") + listOfNotNull(localAbi)
+
 android {
     namespace = "com.edureminder.quicktube"
 
@@ -48,8 +53,7 @@ android {
             ?: "https://api.github.com/repos/devgalib/QuickTube/releases/latest"
         buildConfigField("String", "UPDATE_API_URL", "\"$updateUrl\"")
         buildConfigField("boolean", "UPDATE_URL_OVERRIDDEN", "${project.hasProperty("updateApiUrl")}")
-        // Phones only (the bundled Python is per-ABI); keeps the APK small.
-        ndk { abiFilters += setOf("arm64-v8a", "armeabi-v7a") }
+        ndk { abiFilters += apkAbis.toSet() }
     }
 
     buildTypes {
@@ -77,7 +81,7 @@ android {
         abi {
             isEnable = true
             reset()
-            include("arm64-v8a", "armeabi-v7a")
+            include(*apkAbis.toTypedArray())
             isUniversalApk = true
         }
     }
