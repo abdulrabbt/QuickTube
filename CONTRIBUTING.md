@@ -24,6 +24,9 @@ cd QuickTube
 You **don't** need `google-services.json` or a signing key. Without them the app builds with analytics turned off,
 and debug builds use the standard debug key.
 
+Running on an **emulator** instead of a phone needs one extra flag (the APKs are phones-only by default) and an AVD:
+see [docs/RUNNING-EMULATOR.md](docs/RUNNING-EMULATOR.md).
+
 ## Workflow
 
 1. Open (or pick) an issue and say you're working on it, so work isn't duplicated.
