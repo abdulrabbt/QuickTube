@@ -105,10 +105,10 @@ internal class DesktopDownloadEngine(
         val dir = request.folder?.let { Urls.safeFileName(it) }?.takeIf { it.isNotBlank() }?.let { File(root, it).apply { mkdirs() } } ?: root
         val base = Urls.safeFileName(request.title)
         val suffix = request.quality?.let { "($it)" }.orEmpty()
-        var file = File(dir, Branding.fileName("$base$suffix") + ".${request.ext}")
+        var file = File(dir, "$base$suffix.${request.ext}")
         var n = 1
         while (file.exists() || dao.countWithPath(file.absolutePath) > 0) {
-            file = File(dir, Branding.fileName("$base$suffix ($n)") + ".${request.ext}"); n++
+            file = File(dir, "$base$suffix ($n).${request.ext}"); n++
         }
         val headers = request.headers.takeIf { it.isNotEmpty() }?.let { h -> JsonObject(h.mapValues { JsonPrimitive(it.value) }).toString() }
         val id = dao.insert(

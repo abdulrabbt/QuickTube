@@ -164,12 +164,12 @@ internal class DownloadEngine(
         val dir = request.folder?.let { Urls.safeFileName(it) }?.takeIf { it.isNotBlank() }?.let { File(root, it).apply { mkdirs() } } ?: root
         val base = Urls.safeFileName(request.title)
         val suffix = request.quality?.let { "($it)" }.orEmpty()
-        // Every file ends with the app's name and site ("Song(720p) - QuickTube edureminder.com.mp4").
-        var file = File(dir, Branding.fileName("$base$suffix") + ".${request.ext}")
+        // File names carry no branding: "Song(720p).mp4".
+        var file = File(dir, "$base$suffix.${request.ext}")
         var n = 1
         // Merged downloads only appear on disk when they finish, so names already given to tasks count too.
         while (file.exists() || File(file.path + ".part").exists() || dao.countWithPath(file.absolutePath) > 0) {
-            file = File(dir, Branding.fileName("$base$suffix ($n)") + ".${request.ext}"); n++
+            file = File(dir, "$base$suffix ($n).${request.ext}"); n++
         }
         val headers = if (request.headers.isEmpty()) null
         else JsonObject(request.headers.mapValues { JsonPrimitive(it.value) }).toString()
