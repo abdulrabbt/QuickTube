@@ -31,11 +31,13 @@ jobs:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
       - name: Build debug APK
-        run: ./gradlew :app:assembleDebug --stacktrace
+        # --no-configuration-cache: KSP's processor classpath can't be serialized into the
+        # configuration cache on a cold runner (Gradle 9.9 + AGP + KSP2), which fails the build.
+        run: ./gradlew :app:assembleDebug --stacktrace --no-configuration-cache
 
       - name: Unit tests
         # Android modules, the shared (multiplatform) modules on Android and desktop, and the desktop app itself.
-        run: ./gradlew testDebugUnitTest testAndroidHostTest desktopTest :desktopApp:compileKotlinDesktop --stacktrace
+        run: ./gradlew testDebugUnitTest testAndroidHostTest desktopTest :desktopApp:compileKotlinDesktop --stacktrace --no-configuration-cache
 
       - name: Upload test reports
         if: failure()

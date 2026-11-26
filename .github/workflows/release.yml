@@ -77,7 +77,9 @@ jobs:
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
         run: |
-          ./gradlew :app:assembleRelease --no-parallel --stacktrace \
+          # --no-configuration-cache: KSP's processor classpath isn't cacheable on a cold runner
+          # (Gradle 9.9 + AGP + KSP2), which would fail the build before it starts.
+          ./gradlew :app:assembleRelease --no-parallel --stacktrace --no-configuration-cache \
             -PappVersionCode=${{ steps.version.outputs.code }} \
             -PappVersionName=${{ steps.version.outputs.name }}
 
