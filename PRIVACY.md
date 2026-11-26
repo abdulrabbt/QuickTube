@@ -2,16 +2,20 @@
 
 QuickTube has no accounts and no servers of its own. Your downloads, history, vault and settings stay on your device.
 
-## What the official releases collect
+## Firebase
 
-Builds published on the [Releases page](https://github.com/devgalib/QuickTube/releases) include Google Firebase:
+The [releases published in this repository](https://github.com/abdulrabbt/QuickTube/releases) do **not** include Google
+Firebase: the owner's builds are made without an `app/google-services.json` configuration, so they collect nothing. Firebase
+is only added to a build that has its own `app/google-services.json`.
 
-- **Crashlytics**: crash reports (stack trace, device model, Android version, app version) so we can fix crashes.
+The official upstream QuickTube releases did include Google Firebase, which collected:
+
+- **Crashlytics**: crash reports (stack trace, device model, Android version, app version) so crashes could be fixed.
 - **Analytics**: anonymous usage counts, for example "a download started" (video or audio, HTTP or HLS) or "a screen was opened".
 
-We **never** send the URLs you visit or download, video titles, search terms, file names or anything you type. For downloads we count only the site's domain (for example "tiktok.com"), the country and a short reason code when one fails, so we can see which sites need fixing.
+Those releases **never** sent the URLs you visit or download, video titles, search terms, file names or anything you type. For downloads they counted only the site's domain (for example "tiktok.com"), the country and a short reason code when one failed, so it was clear which sites needed fixing.
 
-You can turn both off at any time in **Settings → Privacy**. Builds made from source without a Firebase configuration collect nothing.
+When Firebase is included, you can turn both off at any time in **Settings → Privacy**. Builds made from source without a Firebase configuration collect nothing.
 
 ## Network requests
 

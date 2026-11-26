@@ -5,7 +5,7 @@ Thanks for helping! This guide covers how to set up the project, how changes get
 ## Ground rules
 
 - Be kind and constructive. See the [Code of Conduct](CODE_OF_CONDUCT.md).
-- **All changes go through pull requests to `main`.** Nobody pushes to `main` directly except the maintainer, and only the maintainer can
+- **All changes go through pull requests to `main`.** Nobody pushes to `main` directly except the owner, and only the owner can
   publish releases (`production` branch).
 - One topic per pull request. Small PRs get reviewed much faster.
 - Don't add support for downloading DRM-protected content, and don't post links to piracy, adult or illegal content in issues or PRs.
@@ -15,7 +15,7 @@ Thanks for helping! This guide covers how to set up the project, how changes get
 Requirements: Android Studio (latest stable) or JDK 21+, Android SDK with API 37.
 
 ```bash
-git clone https://github.com/devgalib/QuickTube.git
+git clone https://github.com/abdulrabbt/QuickTube.git
 cd QuickTube
 ./gradlew :app:installDebug      # build and install on a connected device
 ./gradlew testDebugUnitTest       # unit tests

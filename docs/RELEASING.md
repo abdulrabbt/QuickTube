@@ -1,92 +1,140 @@
 # Releasing
 
-Releases are fully automated and **only the maintainer can publish one**.
+QuickTube releases are built and signed in this repository. The owner publishes them; everyone else contributes through
+pull requests to `main`.
 
 ## Branches
 
 | Branch | Who can push | What happens |
 |---|---|---|
-| `main` | Maintainer directly; everyone else via pull request (1 approving review, green CI) | CI builds and runs unit tests |
-| `production` | **Maintainer only** (repository ruleset) | The **Release** workflow builds a signed APK and publishes a GitHub Release |
+| `main` | The owner directly; everyone else via pull request | CI builds the app and runs the unit tests |
+| `production` | **Only the owner** | Pushing it triggers the **Release** workflow, which builds the signed APKs and publishes a GitHub Release |
 
-## Publishing a release
+## One-time signing setup
 
-```bash
-git push origin main:production
+The release key is a JKS keystore at `C:\Users\abdul\.quicktube-keys\release.jks` (alias `quicktube`, RSA 4096). Its path and
+passwords go in the git-ignored `local.properties`:
+
+```properties
+RELEASE_KEYSTORE_PATH=C:\\Users\\abdul\\.quicktube-keys\\release.jks
+RELEASE_KEYSTORE_PASSWORD=<keystore password>
+RELEASE_KEY_ALIAS=quicktube
+RELEASE_KEY_PASSWORD=<key password>
 ```
 
-The workflow then:
+**Keep a backup.** Every release must use the same key so installed apps can update in place; if the keystore or its passwords
+are lost, users can't update in place and would have to uninstall and reinstall. Never commit the keystore, `local.properties`
+or its passwords.
 
-1. names the version `<appVersionBase>.<run number>` (e.g. `1.0.7`, versionCode `7`). `appVersionBase` lives in `gradle.properties`;
-   bump it (e.g. to `1.1`) for a feature release. Version codes always increase, so updates install over older versions.
-2. restores the signing key and `google-services.json` from encrypted secrets (they never exist in the repository),
-3. builds `assembleRelease` with R8 and resource shrinking, verifies every APK's signature,
-4. creates the `vX.Y.Z` tag and a GitHub Release with one APK per CPU type (`QuickTube-vX.Y.Z-arm64-v8a.apk`,
-   `QuickTube-vX.Y.Z-armeabi-v7a.apk`, ~35% smaller) plus the universal `QuickTube-vX.Y.Z.apk`, each with a `.sha256`, and
-   notes generated from merged PRs. The universal APK and its checksum are uploaded last: versions up to 1.0.3 take the last
-   `.apk` asset, so they keep updating correctly.
+## Versioning
 
-## How users get the update
+Every release is named and tagged `v<appVersionBase>.<versionCode>`, for example `v1.0.9`. `appVersionBase` lives in
+`gradle.properties`; bump it (for example to `1.1`) for a feature release. In CI the version code is **1 + the highest last
+number among the existing `v*` release tags** (`v1.0.8` → `9`), so updates always go forward. The Release workflow also accepts
+an optional `version_code` input to override that. Local builds pass both numbers explicitly:
 
-Installed apps check `api.github.com/repos/devgalib/QuickTube/releases/latest` on launch (at most every 6 hours; release
-builds only) and in Settings → Check for updates. When the tag's last number (the versionCode) is higher than theirs, they get an
-"Update available" sheet with the release notes. **Update now** downloads the APK for the phone's CPU (the universal one if
-there's no match), checks it against its `.sha256` asset and
-the installed app's signing key, then installs it with Android's PackageInstaller. Users allow "install unknown apps" for
-QuickTube once; Google Play Protect may also offer to scan the app the first time.
-
-After the update, the downloaded APK is deleted (right away when Android announces the replaced package, otherwise on the next
-start), like the Play Store does. Downloads, history and settings are untouched: they live in the app's database and settings,
-which Android keeps across updates, and the database only migrates forward.
-
-So a release only needs: tag `v<appVersionBase>.<versionCode>`, an `*.apk` asset and its `*.apk.sha256` (optionally per-ABI
-`*-<abi>.apk` ones). The workflow does this.
-Drafts and pre-releases are never offered.
-
-Test against a fake release: build with `-PupdateApiUrl=http://localhost:8765/latest.json`, serve a release JSON plus the APK
-and checksum from that folder with `python3 -m http.server 8765`, and run `adb reverse tcp:8765 tcp:8765`.
-
-## Firebase
-
-Project **`quicktube-app`** (Crashlytics + Analytics), Android apps `com.edureminder.quicktube` and `com.edureminder.quicktube.qa`.
-Maintainers get the config with the Firebase CLI:
-
-```bash
-firebase apps:sdkconfig ANDROID --project quicktube-app -o app/google-services.json
+```powershell
+.\gradlew.bat :app:assembleRelease -PappVersionCode=9 -PappVersionName=1.0.9
 ```
 
-`app/google-services.json` is git-ignored. Collection is off in debug builds and when users opt out (Settings → Privacy).
+## Publishing
 
-## Secrets
+### A. Local build, uploaded by hand
 
-| Secret | Purpose |
-|---|---|
-| `RELEASE_KEYSTORE_BASE64` | The release keystore (JKS), base64-encoded |
-| `RELEASE_KEYSTORE_PASSWORD` / `RELEASE_KEY_ALIAS` / `RELEASE_KEY_PASSWORD` | Keystore credentials |
-| `GOOGLE_SERVICES_JSON` | Firebase config (Crashlytics + Analytics). Optional: without it the release has no analytics |
+1. Build the signed APKs with the next version code and name (see above). The outputs are in `app/build/outputs/apk/release/`.
+2. Rename/copy them to the updater's naming scheme and generate a `.sha256` for each:
+   - `app-arm64-v8a-release.apk` → `QuickTube-v1.0.9-arm64-v8a.apk`
+   - `app-armeabi-v7a-release.apk` → `QuickTube-v1.0.9-armeabi-v7a.apk`
+   - `app-universal-release.apk` → `QuickTube-v1.0.9.apk`
+3. Create a draft release, upload the per-ABI APKs and their checksums, upload the universal APK and its checksum **last**, then
+   publish it (that order matters: older updaters take the last `.apk` asset):
 
-Set or rotate them with:
-
-```bash
-scripts/setup-release-secrets.sh
-```
-
-It reads the keystore path and passwords from your local, git-ignored `local.properties` and `app/google-services.json`, and sends
-them to GitHub with the `gh` CLI. Nothing is printed.
-
-**Keep the keystore safe and backed up.** It's stored outside the repository. If it's lost, existing users can't update to new
-releases and would have to uninstall first.
-
-## Updating the README mockups
-
-1. On a device, turn on a clean status bar (demo mode) and capture screens with no personal content (no Library list, no private links):
-
-   ```bash
-   adb shell settings put global sysui_demo_allowed 1
-   adb shell am broadcast -a com.android.systemui.demo -e command enter
-   adb shell am broadcast -a com.android.systemui.demo -e command clock -e hhmm 1200
-   adb exec-out screencap -p > docs/screenshots/raw/home.png
+   ```powershell
+   gh release create v1.0.9 --draft --title "QuickTube v1.0.9" --target main --generate-notes `
+     QuickTube-v1.0.9-arm64-v8a.apk QuickTube-v1.0.9-arm64-v8a.apk.sha256 `
+     QuickTube-v1.0.9-armeabi-v7a.apk QuickTube-v1.0.9-armeabi-v7a.apk.sha256
+   gh release upload v1.0.9 QuickTube-v1.0.9.apk QuickTube-v1.0.9.apk.sha256
+   gh release edit v1.0.9 --draft=false --latest
    ```
 
-2. Render the framed mockups (needs Google Chrome and ImageMagick): `python3 scripts/make_mockups.py`
-3. Turn demo mode off again: `adb shell am broadcast -a com.android.systemui.demo -e command exit`
+   A `.sha256` file is a `sha256sum`-style line: the lowercase hash, two spaces, then the APK file name.
+
+### B. Automated (recommended)
+
+1. Store the signing secrets in the repository **once**. The script reads them from `local.properties` and uploads
+   `RELEASE_KEYSTORE_BASE64`, `RELEASE_KEYSTORE_PASSWORD`, `RELEASE_KEY_ALIAS` and `RELEASE_KEY_PASSWORD`:
+
+   ```bash
+   scripts/setup-release-secrets.sh
+   ```
+
+2. Optionally pin the signing key: set the repository variable `EXPECTED_CERT_SHA256` to the release certificate's SHA-256
+   fingerprint (Settings → Secrets and variables → Actions → Variables). The workflow then refuses an APK signed with a
+   different key; without the variable it prints a warning and only runs the apksigner checks.
+3. Publish by pushing `main` to `production`, or start the workflow by hand:
+
+   ```bash
+   git push origin main:production
+   ```
+
+   Or Actions → **Release** → **Run workflow** (optionally fill in `version_code`).
+
+The workflow builds `:app:assembleRelease` with the computed version, verifies the signatures, creates the tag and a **draft**
+release, uploads the per-ABI APKs and checksums, uploads the universal APK and its checksum last, and finally publishes the
+release as **Latest**.
+
+## Required release assets (in-app updater)
+
+The app reads `https://api.github.com/repos/abdulrabbt/QuickTube/releases/latest`, so only a release that is **published**
+(not a draft or pre-release) and marked **Latest** is offered. It must have:
+
+- the tag `v<appVersionBase>.<versionCode>` (e.g. `v1.0.9`),
+- at least one `*.apk` asset, optionally with a matching `*.apk.sha256`,
+- for per-ABI updates: `QuickTube-v<version>-arm64-v8a.apk`, `QuickTube-v<version>-armeabi-v7a.apk`, plus the universal
+  `QuickTube-v<version>.apk`.
+
+## How in-app updates work
+
+- Release builds check `/releases/latest` on launch (at most every 6 hours) and on Settings → **Check for updates**.
+- The last number of the tag (the version code) is compared with the installed app's version code; a higher one shows the
+  update sheet with the release notes.
+- The download must have the same package name (`com.edureminder.quicktube`) and be signed with the **same key** as the
+  installed app, or Android refuses to install it.
+- The app downloads the APK matching the phone's ABI (or the universal one when there's no match) and verifies its SHA-256 when
+  a `.sha256` asset exists.
+- Android asks once for "install unknown apps" for QuickTube; after the update the downloaded APK is deleted and downloads,
+  history and settings are kept.
+
+## FFmpeg video decoder pack (prerequisite)
+
+The on-demand FFmpeg video decoder pack is published as a **pre-release** tagged `ffmpeg-video-<nextlib version>` in this
+repository by `scripts/publish-ffmpeg-pack.sh` (run it whenever `nextlib` changes in `gradle/libs.versions.toml`). It is not an
+app release: the in-app updater ignores pre-releases (`/releases/latest` skips them) and only downloads the pack for playback.
+
+## Testing an update locally, without publishing
+
+Build with the update URL pointed at a local server:
+
+```powershell
+.\gradlew.bat :app:assembleRelease -PappVersionCode=99 -PappVersionName=1.0.99 -PupdateApiUrl=http://localhost:8765/latest.json
+```
+
+Put a GitHub-release-shaped `latest.json` next to the APK and its `.sha256` in one folder, then serve it and forward the port to
+the phone:
+
+```bash
+python3 -m http.server 8765
+adb reverse tcp:8765 tcp:8765
+```
+
+`latest.json` needs `tag_name`, `draft`/`prerelease` set to false, and an `assets` array with the APK's `name`, `size` and
+`browser_download_url` (e.g. `http://localhost:8765/QuickTube-v1.0.99-arm64-v8a.apk`); the `.sha256` asset name is the APK name
+plus `.sha256`.
+
+## Notes
+
+- Release builds from this repository have **no Firebase** unless `app/google-services.json` is added before building (then set
+  the optional `GOOGLE_SERVICES_JSON` secret so the workflow restores it; Crashlytics and Analytics are documented in
+  [PRIVACY.md](../PRIVACY.md)).
+- Never commit the keystore or its passwords; `local.properties`, `*.jks` and `google-services.json` are git-ignored.
+- Never force-push `production`, and never move or delete a published release tag — the in-app updater depends on it.

@@ -6,12 +6,12 @@
 
 **Search, watch and download videos and music from YouTube and 1,800+ sites. Open source, no ads, no account.**
 
-[![CI](https://github.com/devgalib/QuickTube/actions/workflows/ci.yml/badge.svg)](https://github.com/devgalib/QuickTube/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/devgalib/QuickTube?label=download&color=1DD8B8)](https://github.com/devgalib/QuickTube/releases/latest)
+[![CI](https://github.com/abdulrabbt/QuickTube/actions/workflows/ci.yml/badge.svg)](https://github.com/abdulrabbt/QuickTube/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/abdulrabbt/QuickTube?label=download&color=1DD8B8)](https://github.com/abdulrabbt/QuickTube/releases/latest)
 [![License: GPL v3](https://img.shields.io/badge/license-GPL--3.0-6C8CFF)](LICENSE)
 ![Android 7.0+](https://img.shields.io/badge/Android-7.0%2B-3DDC84?logo=android&logoColor=white)
 
-[**Download the latest APK**](https://github.com/devgalib/QuickTube/releases/latest) · [Report a bug](https://github.com/devgalib/QuickTube/issues/new/choose) · [Contribute](CONTRIBUTING.md)
+[**Download the latest APK**](https://github.com/abdulrabbt/QuickTube/releases/latest) · [Report a bug](https://github.com/abdulrabbt/QuickTube/issues/new/choose) · [Contribute](CONTRIBUTING.md)
 
 </div>
 
@@ -38,7 +38,7 @@
 
 ## Install
 
-1. Open the [latest release](https://github.com/devgalib/QuickTube/releases/latest) on your phone and download
+1. Open the [latest release](https://github.com/abdulrabbt/QuickTube/releases/latest) on your phone and download
    `QuickTube-vX.Y.Z-arm64-v8a.apk` (almost every phone from the last 8 years), `…-armeabi-v7a.apk` for older 32-bit phones,
    or the larger `QuickTube-vX.Y.Z.apk` that runs on both.
 2. Open it and allow "Install unknown apps" for your browser when Android asks.
@@ -158,12 +158,13 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the module layout and how t
 ## Contributing
 
 Contributions are welcome! Read [CONTRIBUTING.md](CONTRIBUTING.md) to get started, and the [Code of Conduct](CODE_OF_CONDUCT.md).
-All changes go through pull requests to `main`; releases are published by the maintainer (see [docs/RELEASING.md](docs/RELEASING.md)).
+All changes go through pull requests to `main`; releases are published by the repository owner (see [docs/RELEASING.md](docs/RELEASING.md)).
 
 ## Privacy
 
-No accounts, no servers of our own. Official releases send crash reports and anonymous usage counts through Firebase, and you can
-turn that off in Settings → Privacy. Details in [PRIVACY.md](PRIVACY.md).
+No accounts, no servers of our own. Builds published here have Firebase analytics and crash reporting turned off (they need
+an `app/google-services.json`, which this repository doesn't ship); you can still toggle them in Settings → Privacy if you
+add one. Details in [PRIVACY.md](PRIVACY.md).
 
 ## Credits
 
@@ -176,3 +177,5 @@ turn that off in Settings → Privacy. Details in [PRIVACY.md](PRIVACY.md).
 
 QuickTube is free software: you can redistribute it and/or modify it under the terms of the
 [GNU General Public License v3.0 or later](LICENSE).
+
+Forked from [QuickTube](https://github.com/devgalib/QuickTube) by @devgalib (GPL-3.0).

@@ -6,6 +6,11 @@ on:
   push:
     branches: [production]
   workflow_dispatch:
+    inputs:
+      version_code:
+        description: "Optional version code override (default: 1 + the highest v* release tag)"
+        required: false
+        type: string
 
 concurrency:
   group: release
@@ -19,7 +24,6 @@ jobs:
     name: Build & publish
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    environment: production
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,9 +38,21 @@ jobs:
 
       - name: Work out the version
         id: version
+        env:
+          VERSION_CODE_OVERRIDE: ${{ inputs.version_code }}
         run: |
           base=$(grep -E '^appVersionBase=' gradle.properties | cut -d= -f2)
-          code=${{ github.run_number }}
+          if [ -n "$VERSION_CODE_OVERRIDE" ]; then
+            case "$VERSION_CODE_OVERRIDE" in
+              *[!0-9]*) echo "::error::version_code must be a number, got '$VERSION_CODE_OVERRIDE'"; exit 1 ;;
+            esac
+            code=$VERSION_CODE_OVERRIDE
+          else
+            # One more than the last number of the newest app release tag (v1.0.8 -> versionCode 8).
+            # desktop-v* and ffmpeg-video-* tags are not app releases.
+            last=$(git tag --list 'v*' | grep -vE '^(desktop-v|ffmpeg-video-)' | grep -oE '[0-9]+$' | sort -n | tail -1 || true)
+            code=$(( ${last:-0} + 1 ))
+          fi
           echo "code=$code" >> "$GITHUB_OUTPUT"
           echo "name=$base.$code" >> "$GITHUB_OUTPUT"
           echo "Releasing $base.$code (versionCode $code)"
@@ -67,7 +83,7 @@ jobs:
 
       - name: Verify signatures and collect the APKs
         env:
-          EXPECTED_CERT_SHA256: b5fb3a7defdc7a3e0c0d6c3b468bc6353cd22225bbfee0585d7f337667aeb87a
+          EXPECTED_CERT_SHA256: ${{ vars.EXPECTED_CERT_SHA256 }}
         run: |
           dir=app/build/outputs/apk/release
           ls -la "$dir"
@@ -75,6 +91,9 @@ jobs:
           apksigner=$(ls "$ANDROID_HOME"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -1)
           [ -n "$apksigner" ] || { echo "::error::apksigner not found in $ANDROID_HOME/build-tools"; exit 1; }
           echo "Using $apksigner"
+          if [ -z "$EXPECTED_CERT_SHA256" ]; then
+            echo "::warning::EXPECTED_CERT_SHA256 repository variable is not set; the owner should set it to the release key's certificate SHA-256, otherwise a wrong signing key is not refused"
+          fi
           mkdir -p dist
           # One APK per CPU type plus a universal one (same version code; the in-app updater picks by CPU).
           for abi in arm64-v8a armeabi-v7a universal; do
@@ -86,9 +105,9 @@ jobs:
             # Output differs between build-tools versions ("Signer #1 certificate …" vs "V2 Signer: certificate …").
             digest=$(echo "$report" | grep -m1 -oE "certificate SHA-256 digest: [0-9a-f]{64}" | awk '{print $NF}')
             echo "$abi signed with certificate SHA-256: ${digest:-none}"
-            # Fingerprint of the QuickTube release key (public; not a secret). Anything else is refused.
-            if [ "$digest" != "$EXPECTED_CERT_SHA256" ]; then
-              echo "$report"; echo "::error::$src is not signed with the QuickTube release key"; exit 1
+            # The expected fingerprint of the release key is a repository variable (public; not a secret).
+            if [ -n "$EXPECTED_CERT_SHA256" ] && [ "$digest" != "$EXPECTED_CERT_SHA256" ]; then
+              echo "$report"; echo "::error::$src is not signed with the expected QuickTube release key"; exit 1
             fi
             # Some phones' installers (vivo…) refuse an APK without the v1 JAR signature: "missing the developer certificate".
             # (apksigner skips v1 for minSdk 24+, so check as if for Android 6, like those installers do.)

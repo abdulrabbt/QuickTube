@@ -33,4 +33,4 @@ if [ -f app/google-services.json ]; then
 else
   echo "  - app/google-services.json not found: releases will be built without Firebase"
 fi
-echo "Done. Publish a release with: git push origin main:production"
+echo "Done. Publish a release with: git push origin main:production (or run the Release workflow from the Actions tab)"
