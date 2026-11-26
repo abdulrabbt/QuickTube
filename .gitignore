@@ -1,5 +1,7 @@
 # ---- Build output ----
 build/
+# Renamed APKs + checksums prepared for a release (see docs/RELEASING.md)
+/dist/
 /captures
 .externalNativeBuild
 .cxx
