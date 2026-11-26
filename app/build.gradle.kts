@@ -50,7 +50,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // Where the app looks for new versions. Override with -PupdateApiUrl=… to test against a local fake release.
         val updateUrl = (project.findProperty("updateApiUrl") as String?)
-            ?: "https://api.github.com/repos/devgalib/QuickTube/releases/latest"
+            ?: "https://api.github.com/repos/abdulrabbt/QuickTube/releases/latest"
         buildConfigField("String", "UPDATE_API_URL", "\"$updateUrl\"")
         buildConfigField("boolean", "UPDATE_URL_OVERRIDDEN", "${project.hasProperty("updateApiUrl")}")
         ndk { abiFilters += apkAbis.toSet() }

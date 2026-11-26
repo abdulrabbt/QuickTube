@@ -92,7 +92,7 @@ val generateFfmpegPackManifest by tasks.registering(GenerateFfmpegPackManifest::
     aar.from(ffmpegPackAar)
     tag = ffmpegPackTag
     // Override with -PffmpegPackUrl=http://localhost:8766 to test against files served locally (adb reverse).
-    baseUrl = (findProperty("ffmpegPackUrl") as String?) ?: "https://github.com/devgalib/QuickTube/releases/download"
+    baseUrl = (findProperty("ffmpegPackUrl") as String?) ?: "https://github.com/abdulrabbt/QuickTube/releases/download"
     abis = ffmpegPackAbis
     outputDir = layout.buildDirectory.dir("generated/ffmpegPack")
 }
