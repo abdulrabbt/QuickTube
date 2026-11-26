@@ -131,6 +131,21 @@ adb reverse tcp:8765 tcp:8765
 `browser_download_url` (e.g. `http://localhost:8765/QuickTube-v1.0.99-arm64-v8a.apk`); the `.sha256` asset name is the APK name
 plus `.sha256`.
 
+## Branch and tag protection
+
+The repository has three rulesets (Settings → Rules, or `gh api repos/abdulrabbt/QuickTube/rulesets`):
+
+| Ruleset | Targets | Rules | Bypass |
+|---|---|---|---|
+| Main quality gates | `main` | pull request required, the **Build & unit tests** check must pass, linear history | owner (direct pushes still work) |
+| Protect release branches | `main`, `production` | no branch deletion, no force-push | none |
+| Protect release tags | every tag | no tag deletion, no moving/force-updating an existing tag | none |
+
+Tag **creation** is still allowed (needed for `v*` app releases, `desktop-v*` desktop releases and
+`ffmpeg-video-*` decoder packs). If a branch or tag really must be corrected, temporarily switch the matching
+ruleset to **Disabled** (Settings → Rules), fix it, and re-enable it right away. Never move or delete a published
+app release tag: installed apps update from it.
+
 ## Notes
 
 - Release builds from this repository have **no Firebase** unless `app/google-services.json` is added before building (then set
