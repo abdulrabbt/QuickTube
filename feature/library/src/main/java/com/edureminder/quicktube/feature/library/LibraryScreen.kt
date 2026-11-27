@@ -34,7 +34,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -260,54 +259,76 @@ fun LibraryScreen(
 }
 
 /**
- * Asks what should happen to deleted downloads: the recycle bin (recoverable for 30 days) or permanent removal from
- * the device. Forever-deleted files still get a "Deleted downloads" entry, so they can be downloaded again later.
+ * Asks what should happen to deleted downloads: to the recycle bin (recoverable for 30 days) or permanently off the
+ * device. Each option is one full-row tap target; Cancel, back or an outside tap leaves everything as it was.
  */
 @Composable
 private fun DeleteChoiceDialog(count: Int, onRecycleBin: () -> Unit, onDeletePermanently: () -> Unit, onCancel: () -> Unit) {
     val plural = count > 1
-    val noun = if (plural) "files" else "file"
-    val pronoun = if (plural) "them" else "it"
+    val cs = MaterialTheme.colorScheme
     AlertDialog(
         onDismissRequest = onCancel,
-        title = { Text(if (plural) "Delete $count files?" else "Delete file?") },
+        containerColor = cs.surfaceContainer,
+        shape = RoundedCornerShape(24.dp),
+        title = {
+            Text(
+                if (plural) "Delete $count files?" else "Delete file?",
+                style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold,
+            )
+        },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                Text("Choose what happens to the $noun:", style = MaterialTheme.typography.bodyMedium)
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text("Recycle bin", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-                    Text(
-                        "Keeps the $noun recoverable for 30 days. Restore $pronoun from Settings → Recover deleted files.",
-                        style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        "Delete permanently", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                    Text(
-                        "Removes the $noun from this device now and can't be undone. " +
-                            (if (plural) "They still appear" else "It still appears") +
-                            " under Settings → Deleted downloads, so you can download $pronoun again.",
-                        style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    if (plural) "Choose how to remove these files." else "Choose how to remove this file.",
+                    style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant,
+                )
+                DeleteOptionRow(
+                    icon = QtIcons.RestoreFromTrash, tint = cs.primary,
+                    title = "Recycle bin", subtitle = "Recoverable for 30 days",
+                    onClick = onRecycleBin,
+                )
+                DeleteOptionRow(
+                    icon = QtIcons.Delete, tint = cs.error,
+                    title = "Delete permanently", subtitle = "Can't be undone · stays in Deleted downloads",
+                    titleColor = cs.error, onClick = onDeletePermanently,
+                )
             }
         },
-        confirmButton = {
-            TextButton(
-                onClick = onDeletePermanently,
-                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-            ) { Text("Delete permanently") }
-        },
-        dismissButton = {
-            Row {
-                TextButton(onClick = onCancel) { Text("Cancel") }
-                TextButton(onClick = onRecycleBin) { Text("Recycle bin") }
-            }
-        },
+        confirmButton = { TextButton(onClick = onCancel) { Text("Cancel") } },
     )
+}
+
+/** One choice in [DeleteChoiceDialog]: a whole-row tap target with a tinted icon, a title and a one-line reason. */
+@Composable
+private fun DeleteOptionRow(
+    icon: ImageVector,
+    tint: Color,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+    titleColor: Color = MaterialTheme.colorScheme.onSurface,
+) {
+    Row(
+        Modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+            .pressable(scaleDown = 0.98f, onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier.size(44.dp).clip(CircleShape).background(tint.copy(alpha = 0.16f)),
+            contentAlignment = Alignment.Center,
+        ) { Icon(icon, null, tint = tint, modifier = Modifier.size(24.dp)) }
+        Column(Modifier.weight(1f).padding(start = 12.dp)) {
+            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = titleColor)
+            Text(
+                subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1, overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
 }
 
 /** Thin progress bar with the brand gradient. */
