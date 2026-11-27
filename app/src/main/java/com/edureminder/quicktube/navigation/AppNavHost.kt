@@ -79,12 +79,9 @@ import com.edureminder.quicktube.feature.settings.RegionScreen
 import com.edureminder.quicktube.feature.settings.SettingsActions
 import com.edureminder.quicktube.feature.settings.SettingsScreen
 import com.edureminder.quicktube.feature.settings.ThemeSettingsScreen
-import com.edureminder.quicktube.feature.tools.AppManagerScreen
 import com.edureminder.quicktube.feature.tools.DeletedHistoryScreen
-import com.edureminder.quicktube.feature.tools.LargeFilesScreen
 import com.edureminder.quicktube.feature.tools.RecycleBinScreen
 import com.edureminder.quicktube.feature.tools.StatusSaverScreen
-import com.edureminder.quicktube.feature.tools.StorageCleanScreen
 import com.edureminder.quicktube.feature.tools.VaultScreen
 import com.edureminder.quicktube.feature.home.HomeScreen
 import com.edureminder.quicktube.feature.home.GamesScreen
@@ -319,9 +316,6 @@ fun AppNavHost(nav: NavHostController) {
                         deletedHistory = { nav.navigate(DeletedHistoryRoute) },
                         statusSaver = { nav.navigate(StatusSaverRoute) },
                         vault = { nav.navigate(VaultRoute) },
-                        storageClean = { nav.navigate(StorageCleanRoute) },
-                        largeFiles = { nav.navigate(LargeFilesRoute) },
-                        appManager = { nav.navigate(AppManagerRoute) },
                         region = { nav.navigate(LanguageRoute) },
                         about = { nav.navigate(AboutRoute) },
                     ),
@@ -336,9 +330,6 @@ fun AppNavHost(nav: NavHostController) {
             composable<RecycleBinRoute> { RecycleBinScreen(nav::popBackStack, onHistory = { nav.navigate(DeletedHistoryRoute) }) }
             composable<DeletedHistoryRoute> { DeletedHistoryScreen(nav::popBackStack) }
             composable<VaultRoute> { VaultScreen(nav::popBackStack, onOpenPlayer = { nav.navigate(PlayerRoute) { launchSingleTop = true } }) }
-            composable<StorageCleanRoute> { StorageCleanScreen(nav::popBackStack) }
-            composable<LargeFilesRoute> { LargeFilesScreen(nav::popBackStack) }
-            composable<AppManagerRoute> { AppManagerScreen(nav::popBackStack) }
             composable<SearchRoute> { e ->
                 SearchScreen(
                     e.toRoute<SearchRoute>().initial,

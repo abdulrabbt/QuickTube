@@ -63,7 +63,7 @@ QuickTube tells you when a new version is out and can update itself (Settings �
 | **Player** | Speed, previous / next, seek, double-tap ±10 s, fullscreen landscape, "All videos" queue, Listen (audio-only) mode, shuffle / repeat, mini player, lock-screen and notification controls. |
 | **In-app updates** | New releases are announced inside the app with their release notes. One tap downloads, verifies (SHA-256 and the same signing key) and installs the update; Android asks once for the "install unknown apps" permission. |
 | **Settings** | Download path, max tasks, speed limit, mobile data, notification toggles, **Appearance** (System/Light/Dark, 7 accent palettes, pure-black AMOLED, Material You wallpaper colours on Android 12+), content region, feedback, share, about. |
-| **Tools** | Recycle bin (30-day recover), deleted download history with "Download again", WhatsApp status saver, PIN-locked Vault, storage clean, large files clean, app uninstaller. |
+| **Tools** | Recycle bin (30-day recover), deleted download history with "Download again", WhatsApp status saver, PIN-locked Vault. |
 
 ## Site support
 
@@ -115,7 +115,7 @@ python3 scripts/gen_icons.py /tmp/qt-icons core/designsystem/src/main/java/com/e
 |---|---|
 | Storage (write) | Android 7–10 only, at first launch and again just before a download if it was denied |
 | Notifications | Android 13+, at first launch; Settings → Notifications shows an "Allow" banner if it's off |
-| Photos/videos/audio | Android 13+ (partial access handled on 14+); storage read on 12 and older. Only for Large files clean |
+| Photos/videos/audio | Android 13+ (partial access handled on 14+); storage read on 12 and older. Used by the Gallery and Play → Find my downloads |
 | Storage (read) | Android 10 and older, for WhatsApp status saver; Android 11+ uses the system folder picker instead |
 
 ## Build from source
@@ -150,7 +150,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the module layout and how t
 - **Facebook / Instagram**: public videos work from shared links and from the browser. Private or login-only posts need you
   to sign in inside the QuickTube browser first.
 - Not replicated: SnapTube's "Boost" and "Battery saver", which don't do anything real on modern Android, plus its ads and
-  account sign-in. Storage clean, large files clean and the app uninstaller are implemented for real.
+  account sign-in.
 - **Store policy**: Google Play and the App Store don't allow apps that download YouTube videos. Ship through other channels
   (direct APK, alternative stores) or remove the YouTube download path before submitting.
 - **License**: NewPipe Extractor is GPLv3, so distributing this app means distributing it under GPL-compatible terms.
