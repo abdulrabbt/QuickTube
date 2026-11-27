@@ -69,8 +69,8 @@ data class AppSettings(
     /** The "Trending now" row on the Download tab's home page (off unless turned on in Settings). */
     val showTrending: Boolean = false,
     val onboarded: Boolean = false,
-    /** Crash reports + anonymous usage stats (official builds only). */
-    val analyticsEnabled: Boolean = true,
+    /** Crash reports + anonymous usage stats (official builds only). Off until the user opts in in Settings → Privacy. */
+    val analyticsEnabled: Boolean = false,
     /** How captions look in the players. */
     val captionStyle: CaptionStyle = CaptionStyle(),
 )

@@ -9,22 +9,26 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
-/** Firebase Analytics + Crashlytics. Collection is off in debug builds and when the user opts out. */
+/** Firebase Analytics + Crashlytics. Collection starts off and only turns on when the user opts in (Settings → Privacy). */
 internal class FirebaseAnalyticsTracker(private val context: Context) : Analytics {
     private val analytics = FirebaseAnalytics.getInstance(context)
     private val crashlytics = FirebaseCrashlytics.getInstance()
     private val debuggable = context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
-    @Volatile private var enabled = !debuggable
+    @Volatile private var enabled = false
 
     init {
+        // Opt-in: collection is off until the settings flow says the user turned it on, so nothing can be recorded or
+        // sent before then. Debug builds stay off whatever the setting says (see setEnabled).
         apply()
-        // Lets every report be split by country, even events without a country of their own.
-        runCatching { analytics.setUserProperty("country_code", DeviceCountry.code(context)) }
     }
 
     private fun apply() {
         analytics.setAnalyticsCollectionEnabled(enabled)
         crashlytics.isCrashlyticsCollectionEnabled = enabled
+        if (enabled) {
+            // Lets every report be split by country, even events without a country of their own.
+            runCatching { analytics.setUserProperty("country_code", DeviceCountry.code(context)) }
+        }
     }
 
     override fun setEnabled(enabled: Boolean) {

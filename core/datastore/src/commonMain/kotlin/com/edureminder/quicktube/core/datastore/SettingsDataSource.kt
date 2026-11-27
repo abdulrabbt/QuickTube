@@ -137,7 +137,7 @@ class SettingsDataSource(private val dataStore: DataStore<Preferences>, val defa
         contentRegion = p[K.region] ?: "",
         playbackSpeed = p[K.playbackSpeed] ?: 1f,
         onboarded = p[K.onboarded] ?: false,
-        analyticsEnabled = p[K.analytics] ?: true,
+        analyticsEnabled = p[K.analytics] ?: false,
         playHistory = p[K.playHistory] ?: true,
         resumePlayback = p[K.resume] ?: true,
         seekStepSec = p[K.seekStep] ?: 10,
