@@ -15,11 +15,12 @@ The official upstream QuickTube releases did include Google Firebase, which coll
 
 Those releases **never** sent the URLs you visit or download, video titles, search terms, file names or anything you type. For downloads they counted only the site's domain (for example "tiktok.com"), the country and a short reason code when one failed, so it was clear which sites needed fixing.
 
-When Firebase is included in a build, crash reports and usage sharing are **off by default**. Nothing is collected or sent
-until you turn on **Settings → Privacy → "Share crash reports & usage"** yourself, and the same switch turns them off again at
-any time. With the switch on, the same two things as above would be collected, with the same limits: never URLs, titles,
-search terms, file names or anything you type. The choice is kept on your device, so updating the app doesn't change it.
-Builds made from source without a Firebase configuration collect nothing, whatever the switch is set to.
+When Firebase is included in a build, crash reports and usage sharing are **off by default**: the app starts the Firebase
+SDK with collection disabled. Nothing is collected or sent until you turn on **Settings → Privacy → "Share crash reports &
+usage"** yourself, and the same switch turns them off again at any time. With the switch on, the same two things as above
+would be collected, with the same limits: never URLs, titles, search terms, file names or anything you type. The choice is
+kept on your device, so updating the app doesn't change it. Builds made from source without a Firebase configuration collect
+nothing, whatever the switch is set to.
 
 ## Network requests
 
