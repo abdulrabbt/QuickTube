@@ -46,9 +46,6 @@ class SettingsActions(
     val deletedHistory: () -> Unit,
     val statusSaver: () -> Unit,
     val vault: () -> Unit,
-    val storageClean: () -> Unit,
-    val largeFiles: () -> Unit,
-    val appManager: () -> Unit,
     val region: () -> Unit,
     val about: () -> Unit,
 )
@@ -59,7 +56,6 @@ private val Purple = Color(0xFF9B7BFF)
 private val Green = Color(0xFF2FCB7A)
 private val Pink = Color(0xFFFF5C93)
 private val Teal = Color(0xFF1FC8C8)
-private val Amber = Color(0xFFFFB020)
 
 @Composable
 fun SettingsScreen(actions: SettingsActions) {
@@ -142,16 +138,6 @@ fun SettingsScreen(actions: SettingsActions) {
                 NavRow(BrandIcons.WhatsApp, "WhatsApp status saver", tint = Color(0xFF25D366), onClick = actions.statusSaver)
                 RowDivider()
                 NavRow(QtIcons.Lock, "Vault", "Hide private files behind a PIN", tint = Pink, onClick = actions.vault)
-            }
-        }
-        item { GroupLabel("Phone clean") }
-        item {
-            QtCard {
-                NavRow(QtIcons.CleaningServices, "Storage clean", "Temporary files, cache and leftovers", tint = Teal, onClick = actions.storageClean)
-                RowDivider()
-                NavRow(QtIcons.FolderZip, "Large files clean", "Find big videos, music and photos", tint = Amber, onClick = actions.largeFiles)
-                RowDivider()
-                NavRow(QtIcons.Apps, "App uninstaller", tint = Purple, onClick = actions.appManager)
             }
         }
         item { GroupLabel("Privacy") }
