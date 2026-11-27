@@ -240,7 +240,20 @@ fun LibraryScreen(
         DeleteChoiceDialog(
             count = ids.size,
             onRecycleBin = { vm.delete(ids, permanently = false); selection = null; confirmDelete = null },
-            onDeletePermanently = { vm.delete(ids, permanently = true); selection = null; confirmDelete = null },
+            onDeletePermanently = {
+                vm.delete(ids, permanently = true) { failed ->
+                    // Scoped storage may keep another app's file on disk even though the row is gone: say so.
+                    val n = failed.size
+                    Toast.makeText(
+                        context,
+                        "Couldn't remove $n ${if (n == 1) "file" else "files"} from this device — Android protects " +
+                            "files made by another app. Delete ${if (n == 1) "it" else "them"} from your Files app.",
+                        Toast.LENGTH_LONG,
+                    ).show()
+                }
+                selection = null
+                confirmDelete = null
+            },
             onCancel = { confirmDelete = null },
         )
     }

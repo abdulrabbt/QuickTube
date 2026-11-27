@@ -111,9 +111,21 @@ class LibraryViewModel(
      * [permanently] = true removes their files from the device now and records them under Settings → Deleted
      * downloads so they can be downloaded again. The default is the recycle bin, which is also what cancelling a
      * running download uses (its partial file is removed, not kept).
+     *
+     * Android's scoped storage can refuse to delete a file another app created (e.g. one copied in and then imported);
+     * the download row still goes away, so any titles whose file survived are reported to [onFailed] for an honest
+     * warning instead of pretending the file is gone.
      */
-    fun delete(ids: List<Long>, permanently: Boolean = false) = viewModelScope.launch {
-        if (permanently) library.deleteForever(ids) else downloads.remove(ids)
+    fun delete(ids: List<Long>, permanently: Boolean = false, onFailed: (List<String>) -> Unit = {}) = viewModelScope.launch {
+        if (!permanently) {
+            downloads.remove(ids)
+        } else {
+            // Capture the files before the rows disappear, then check the disk after deleteForever has tried them.
+            val tasks = ui.value.done.filter { it.id in ids }
+            library.deleteForever(ids)
+            val remaining = withContext(Dispatchers.IO) { tasks.filter { File(it.filePath).exists() } }
+            if (remaining.isNotEmpty()) onFailed(remaining.map { it.title })
+        }
     }
     fun toVault(ids: List<Long>) = viewModelScope.launch { library.setVault(ids, true) }
     fun rename(id: Long, title: String, done: (Boolean) -> Unit) = viewModelScope.launch { done(library.rename(id, title)) }
