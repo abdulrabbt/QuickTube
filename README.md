@@ -163,8 +163,9 @@ All changes go through pull requests to `main`; releases are published by the re
 ## Privacy
 
 No accounts, no servers of our own. Builds published here have Firebase analytics and crash reporting turned off (they need
-an `app/google-services.json`, which this repository doesn't ship); you can still toggle them in Settings → Privacy if you
-add one. Details in [PRIVACY.md](PRIVACY.md).
+an `app/google-services.json`, which this repository doesn't ship). In any build that does include Firebase, crash reports and
+usage sharing are off by default as well: nothing is sent until you opt in with **Settings → Privacy → "Share crash reports &
+usage"**, and you can turn them off again there at any time. Details in [PRIVACY.md](PRIVACY.md).
 
 ## Credits
 
