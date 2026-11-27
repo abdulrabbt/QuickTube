@@ -33,6 +33,7 @@ import com.edureminder.quicktube.core.navigation.PlayerRoute
 import com.edureminder.quicktube.core.update.UpdateManager
 import com.edureminder.quicktube.core.update.UpdatePrompt
 import com.edureminder.quicktube.navigation.AppNavHost
+import com.edureminder.quicktube.navigation.ClipboardLaunchGuard
 import com.edureminder.quicktube.player.FloatingPlayerActivity
 import com.edureminder.quicktube.core.navigation.VideoRoute
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -64,7 +65,13 @@ class MainActivity : ComponentActivity() {
             }
             updates.checkOnLaunch(force = BuildConfig.UPDATE_URL_OVERRIDDEN)
         }
-        if (savedInstanceState == null) pendingIntent = intent
+        if (savedInstanceState == null) {
+            pendingIntent = intent
+            // A launch intent that opens its own screen owns the foreground: the clipboard watcher must not push the
+            // copied link on top of it on the focus gain this launch causes. Raised before setContent, so even the
+            // first clipboard read sees it; the watcher clears it after one focus gain.
+            if (intent.opensItsOwnScreen()) ClipboardLaunchGuard.suppressNextAutoOpen()
+        }
         setContent {
             val s by settings.settings.collectAsStateWithLifecycle(AppSettings())
             val nav = rememberNavController()
@@ -113,7 +120,23 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        // A new explicit intent also owns the screen. Only flag it when the window isn't focused yet: a focused
+        // window gets no new focus gain, so nothing would consume the flag and it would leak into a later resume.
+        if (intent.opensItsOwnScreen() && !window.decorView.hasWindowFocus()) ClipboardLaunchGuard.suppressNextAutoOpen()
         pendingIntent = intent
+    }
+
+    /**
+     * True when the intent opens a destination of its own instead of just launching or reopening the app: a viewed or
+     * shared link, several shared links (bulk), or one of the "open" extras (the share popup's "Open", the floating
+     * player's expand, the media notification's player). Plain launcher starts (ACTION_MAIN) are not.
+     */
+    private fun Intent.opensItsOwnScreen(): Boolean = when {
+        getStringExtra(EXTRA_BULK) != null -> true
+        getStringExtra("open") != null -> true
+        action == Intent.ACTION_VIEW -> dataString != null
+        action == Intent.ACTION_SEND -> Urls.extractUrl(getStringExtra(Intent.EXTRA_TEXT)) != null
+        else -> false
     }
 
     private fun handleIntent(intent: Intent, navigate: (Any) -> Unit) {
