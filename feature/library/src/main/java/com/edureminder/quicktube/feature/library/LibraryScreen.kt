@@ -289,7 +289,7 @@ private fun DeleteChoiceDialog(count: Int, onRecycleBin: () -> Unit, onDeletePer
                 )
                 DeleteOptionRow(
                     icon = QtIcons.Delete, tint = cs.error,
-                    title = "Delete permanently", subtitle = "Can't be undone · stays in Deleted downloads",
+                    title = "Delete permanently", subtitle = "Can't be undone",
                     titleColor = cs.error, onClick = onDeletePermanently,
                 )
             }
