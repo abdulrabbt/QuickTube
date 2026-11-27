@@ -26,9 +26,9 @@ import java.security.MessageDigest
  * Download tab's "Download copied link" card uses.
  *
  * The last handled link is kept as a hash in app-private preferences, so the same copied link never opens the flow
- * twice (going back and forth, a rotation/recreation, or a re-read after a system dialog are all covered). A
- * different link does trigger again. The clipboard itself is only read, never cleared or modified, and the URL is
- * never written to disk — just its SHA-256 fingerprint.
+ * twice in a row (going back and forth, a rotation/recreation, or a re-read after a system dialog are all covered).
+ * A different link does trigger again, and re-copying an older link opens it again. The clipboard itself is only read,
+ * never cleared or modified, and the URL is never written to disk — just its SHA-256 fingerprint.
  *
  * A launch with an explicit intent (a tapped/shared link, bulk links, an "open downloads/player" extra) already
  * opens a destination of its own, so that focus gain is skipped via [ClipboardLaunchGuard] — the copied link is
