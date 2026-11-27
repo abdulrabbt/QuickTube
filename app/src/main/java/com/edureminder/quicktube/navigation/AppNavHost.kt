@@ -152,6 +152,9 @@ fun AppNavHost(nav: NavHostController) {
             ItemKind.PLAYLIST -> PlaylistRoute(item.url)
         },
     )
+    // Coming to the foreground with a downloadable link in the clipboard opens the download flow exactly like a
+    // pasted/shared link would; the watcher keeps the last handled link so the same one never opens twice in a row.
+    ClipboardLinkWatcher { url -> nav.navigate(router.routeForPasted(url)) { launchSingleTop = true } }
 
     val analytics = koinInject<com.edureminder.quicktube.core.analytics.Analytics>()
     // Screen views by route type only (e.g. "VideoRoute"), never the URL inside it.
