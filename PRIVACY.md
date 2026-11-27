@@ -19,8 +19,8 @@ When Firebase is included in a build, crash reports and usage sharing are **off 
 SDK with collection disabled. Nothing is collected or sent until you turn on **Settings → Privacy → "Share crash reports &
 usage"** yourself, and the same switch turns them off again at any time. With the switch on, the same two things as above
 would be collected, with the same limits: never URLs, titles, search terms, file names or anything you type. The choice is
-kept on your device, so updating the app doesn't change it. Builds made from source without a Firebase configuration collect
-nothing, whatever the switch is set to.
+kept on your device, so updating the app doesn't change it; if you never changed the setting, an update leaves it off.
+Builds made from source without a Firebase configuration collect nothing, whatever the switch is set to.
 
 ## Network requests
 
