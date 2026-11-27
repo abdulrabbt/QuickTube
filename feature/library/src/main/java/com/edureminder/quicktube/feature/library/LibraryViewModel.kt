@@ -106,7 +106,15 @@ class LibraryViewModel(
         done(library.importFolder(settings.current().downloadDir))
     }
 
-    fun delete(ids: List<Long>) = viewModelScope.launch { downloads.remove(ids) }
+    /**
+     * Deletes finished downloads. [permanently] = false moves them to the recycle bin (recoverable for 30 days);
+     * [permanently] = true removes their files from the device now and records them under Settings → Deleted
+     * downloads so they can be downloaded again. The default is the recycle bin, which is also what cancelling a
+     * running download uses (its partial file is removed, not kept).
+     */
+    fun delete(ids: List<Long>, permanently: Boolean = false) = viewModelScope.launch {
+        if (permanently) library.deleteForever(ids) else downloads.remove(ids)
+    }
     fun toVault(ids: List<Long>) = viewModelScope.launch { library.setVault(ids, true) }
     fun rename(id: Long, title: String, done: (Boolean) -> Unit) = viewModelScope.launch { done(library.rename(id, title)) }
     fun pause(id: Long) = downloads.pause(id)

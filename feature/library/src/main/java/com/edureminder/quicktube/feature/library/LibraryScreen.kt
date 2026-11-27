@@ -33,11 +33,14 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -69,7 +72,6 @@ import com.edureminder.quicktube.core.designsystem.pressable
 import com.edureminder.quicktube.core.model.ContentType
 import com.edureminder.quicktube.core.model.DownloadStatus
 import com.edureminder.quicktube.core.model.DownloadTask
-import com.edureminder.quicktube.core.ui.ConfirmDialog
 import com.edureminder.quicktube.core.ui.EmptyBox
 import com.edureminder.quicktube.core.ui.TextInputDialog
 import org.koin.compose.viewmodel.koinViewModel
@@ -235,14 +237,64 @@ fun LibraryScreen(
         }, onDismiss = { renameFor = null })
     }
     confirmDelete?.let { ids ->
-        ConfirmDialog(
-            "Delete ${if (ids.size > 1) "${ids.size} files" else "file"}?",
-            "Deleted files stay in the recycle bin for 30 days.",
-            "Delete",
-            onConfirm = { vm.delete(ids); selection = null },
-            onDismiss = { confirmDelete = null },
+        DeleteChoiceDialog(
+            count = ids.size,
+            onRecycleBin = { vm.delete(ids, permanently = false); selection = null; confirmDelete = null },
+            onDeletePermanently = { vm.delete(ids, permanently = true); selection = null; confirmDelete = null },
+            onCancel = { confirmDelete = null },
         )
     }
+}
+
+/**
+ * Asks what should happen to deleted downloads: the recycle bin (recoverable for 30 days) or permanent removal from
+ * the device. Forever-deleted files still get a "Deleted downloads" entry, so they can be downloaded again later.
+ */
+@Composable
+private fun DeleteChoiceDialog(count: Int, onRecycleBin: () -> Unit, onDeletePermanently: () -> Unit, onCancel: () -> Unit) {
+    val plural = count > 1
+    val noun = if (plural) "files" else "file"
+    val pronoun = if (plural) "them" else "it"
+    AlertDialog(
+        onDismissRequest = onCancel,
+        title = { Text(if (plural) "Delete $count files?" else "Delete file?") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                Text("Choose what happens to the $noun:", style = MaterialTheme.typography.bodyMedium)
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text("Recycle bin", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        "Keeps the $noun recoverable for 30 days. Restore $pronoun from Settings → Recover deleted files.",
+                        style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        "Delete permanently", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                    Text(
+                        "Removes the $noun from this device now and can't be undone. " +
+                            (if (plural) "They still appear" else "It still appears") +
+                            " under Settings → Deleted downloads, so you can download $pronoun again.",
+                        style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onDeletePermanently,
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+            ) { Text("Delete permanently") }
+        },
+        dismissButton = {
+            Row {
+                TextButton(onClick = onCancel) { Text("Cancel") }
+                TextButton(onClick = onRecycleBin) { Text("Recycle bin") }
+            }
+        },
+    )
 }
 
 /** Thin progress bar with the brand gradient. */
