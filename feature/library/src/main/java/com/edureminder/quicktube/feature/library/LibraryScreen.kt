@@ -33,11 +33,13 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -69,7 +71,6 @@ import com.edureminder.quicktube.core.designsystem.pressable
 import com.edureminder.quicktube.core.model.ContentType
 import com.edureminder.quicktube.core.model.DownloadStatus
 import com.edureminder.quicktube.core.model.DownloadTask
-import com.edureminder.quicktube.core.ui.ConfirmDialog
 import com.edureminder.quicktube.core.ui.EmptyBox
 import com.edureminder.quicktube.core.ui.TextInputDialog
 import org.koin.compose.viewmodel.koinViewModel
@@ -235,13 +236,98 @@ fun LibraryScreen(
         }, onDismiss = { renameFor = null })
     }
     confirmDelete?.let { ids ->
-        ConfirmDialog(
-            "Delete ${if (ids.size > 1) "${ids.size} files" else "file"}?",
-            "Deleted files stay in the recycle bin for 30 days.",
-            "Delete",
-            onConfirm = { vm.delete(ids); selection = null },
-            onDismiss = { confirmDelete = null },
+        DeleteChoiceDialog(
+            count = ids.size,
+            onRecycleBin = { vm.delete(ids, permanently = false); selection = null; confirmDelete = null },
+            onDeletePermanently = {
+                vm.delete(ids, permanently = true) { failed ->
+                    // Scoped storage may keep another app's file on disk even though the row is gone: say so.
+                    val n = failed.size
+                    Toast.makeText(
+                        context,
+                        "Couldn't remove $n ${if (n == 1) "file" else "files"} from this device — Android protects " +
+                            "files made by another app. Delete ${if (n == 1) "it" else "them"} from your Files app.",
+                        Toast.LENGTH_LONG,
+                    ).show()
+                }
+                selection = null
+                confirmDelete = null
+            },
+            onCancel = { confirmDelete = null },
         )
+    }
+}
+
+/**
+ * Asks what should happen to deleted downloads: to the recycle bin (recoverable for 30 days) or permanently off the
+ * device. Each option is one full-row tap target; Cancel, back or an outside tap leaves everything as it was.
+ */
+@Composable
+private fun DeleteChoiceDialog(count: Int, onRecycleBin: () -> Unit, onDeletePermanently: () -> Unit, onCancel: () -> Unit) {
+    val plural = count > 1
+    val cs = MaterialTheme.colorScheme
+    AlertDialog(
+        onDismissRequest = onCancel,
+        containerColor = cs.surfaceContainer,
+        shape = RoundedCornerShape(24.dp),
+        title = {
+            Text(
+                if (plural) "Delete $count files?" else "Delete file?",
+                style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold,
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    if (plural) "Choose how to remove these files." else "Choose how to remove this file.",
+                    style = MaterialTheme.typography.bodyMedium, color = cs.onSurfaceVariant,
+                )
+                DeleteOptionRow(
+                    icon = QtIcons.RestoreFromTrash, tint = cs.primary,
+                    title = "Recycle bin", subtitle = "Recoverable for 30 days",
+                    onClick = onRecycleBin,
+                )
+                DeleteOptionRow(
+                    icon = QtIcons.Delete, tint = cs.error,
+                    title = "Delete permanently", subtitle = "Can't be undone",
+                    titleColor = cs.error, onClick = onDeletePermanently,
+                )
+            }
+        },
+        confirmButton = { TextButton(onClick = onCancel) { Text("Cancel") } },
+    )
+}
+
+/** One choice in [DeleteChoiceDialog]: a whole-row tap target with a tinted icon, a title and a one-line reason. */
+@Composable
+private fun DeleteOptionRow(
+    icon: ImageVector,
+    tint: Color,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+    titleColor: Color = MaterialTheme.colorScheme.onSurface,
+) {
+    Row(
+        Modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+            .pressable(scaleDown = 0.98f, onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier.size(44.dp).clip(CircleShape).background(tint.copy(alpha = 0.16f)),
+            contentAlignment = Alignment.Center,
+        ) { Icon(icon, null, tint = tint, modifier = Modifier.size(24.dp)) }
+        Column(Modifier.weight(1f).padding(start = 12.dp)) {
+            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, color = titleColor)
+            Text(
+                subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1, overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 
