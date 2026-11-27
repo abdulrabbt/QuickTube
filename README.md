@@ -115,7 +115,7 @@ python3 scripts/gen_icons.py /tmp/qt-icons core/designsystem/src/main/java/com/e
 |---|---|
 | Storage (write) | Android 7–10 only, at first launch and again just before a download if it was denied |
 | Notifications | Android 13+, at first launch; Settings → Notifications shows an "Allow" banner if it's off |
-| Photos/videos/audio | Android 13+ (partial access handled on 14+); storage read on 12 and older. Used by the Gallery |
+| Photos/videos/audio | Android 13+ (partial access handled on 14+); storage read on 12 and older. Used by the Gallery and Play → Find my downloads |
 | Storage (read) | Android 10 and older, for WhatsApp status saver; Android 11+ uses the system folder picker instead |
 
 ## Build from source
