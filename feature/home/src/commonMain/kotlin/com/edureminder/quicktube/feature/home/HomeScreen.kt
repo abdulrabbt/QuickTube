@@ -206,8 +206,8 @@ private fun DiscoverTab(
     // Android 10+ only lets an app read the clipboard while its window has focus, which comes after
     // ON_RESUME, so read it whenever focus arrives (coming back from another app included).
     val focused = androidx.compose.ui.platform.LocalWindowInfo.current.isWindowFocused
-    // Only links QuickTube can download are offered (a copied GitHub or news link isn't).
-    LaunchedEffect(focused) { if (focused) clip = Urls.extractUrl(readClipboard())?.takeIf(vm::canDownload) }
+    // Any copied link is offered here: the card downloads it when QuickTube can, and just opens it otherwise.
+    LaunchedEffect(focused) { if (focused) clip = Urls.extractUrl(readClipboard())?.let(Urls::normalize) }
     val list = rememberLazyListState()
 
     Box(Modifier.fillMaxSize()) {
@@ -272,28 +272,41 @@ private fun DiscoverTab(
                     }
                     AnimatedVisibility(clip != null, enter = fadeIn() + expandVertically(), exit = fadeOut() + shrinkVertically()) {
                         val url = clip.orEmpty()
+                        // Links QuickTube can download get the formats sheet; anything else is only opened.
+                        val downloadable = vm.canDownload(url)
                         Row(
                             Modifier.padding(top = 14.dp).fillMaxWidth().clip(RoundedCornerShape(20.dp))
                                 .background(MaterialTheme.colorScheme.primaryContainer)
-                                .pressable(scaleDown = 0.98f, onClick = { actions.downloadUrl(url) })
+                                .pressable(scaleDown = 0.98f, onClick = {
+                                    if (downloadable) actions.downloadUrl(url) else actions.openUrl(url)
+                                })
                                 .padding(horizontal = 14.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             BrandTile(url, size = 40.dp, label = Urls.host(url) ?: "L")
                             Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
-                                Text("Download copied link", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                                Text(
+                                    if (downloadable) "Download copied link" else "Open copied link",
+                                    style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                )
                                 Text(url, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = .75f))
                             }
-                            // Its own button: the formats sheet for this link, right here (the card itself opens the page).
+                            // Its own button: the formats sheet for links QuickTube can download, otherwise it just opens
+                            // the page (the card itself does the same).
                             Box(
                                 Modifier.size(44.dp).clip(CircleShape).background(ex.brand)
                                     .pressable(scaleDown = 0.9f, onClick = {
-                                        if (vm.opensInApp(url)) actions.downloadUrl(url) else sheet.open(Urls.normalize(url))
+                                        if (!downloadable) actions.openUrl(url)
+                                        else if (vm.opensInApp(url)) actions.downloadUrl(url) else sheet.open(Urls.normalize(url))
                                     }),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                Icon(QtIcons.Download, "Download", tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(22.dp))
+                                Icon(
+                                    if (downloadable) QtIcons.Download else QtIcons.OpenInNew,
+                                    if (downloadable) "Download" else "Open",
+                                    tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(22.dp),
+                                )
                             }
                         }
                     }
